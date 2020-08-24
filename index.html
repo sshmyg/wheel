@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Fortune wheel</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      html {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+      }
+
+      .game {
+        font: 16px 'Roboto', sans-serif;
+        width: 965px;
+        height: 833px;
+        margin: 0 auto;
+        position: relative;
+        background-image: url('./bg.svg'), url('./stick.svg');
+        background-size: contain, 28px;
+        background-repeat: no-repeat;
+        background-position: 0 0, 83% 85px;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .game__close {
+        background-image: url('./close.svg');
+        background-repeat: no-repeat;
+        background-size: contain;
+        width: 100px;
+        height: 100px;
+        background-color: transparent;
+        border: 0;
+        padding: 0;
+        position: absolute;
+        right: 125px;
+        top: 20px;
+        cursor: pointer;
+      }
+
+      .game__header {
+        width: 295px;
+        position: absolute;
+        left: 301px;
+        top: 142px;
+        text-align: center;
+      }
+
+      .game__title {
+        margin: 0;
+        text-transform: uppercase;
+        font-size: 23px;
+      }
+
+      .game__sub-title {
+        margin: 0;
+        font-size: 20px;
+      }
+
+      .game__footer {
+        position: absolute;
+        height: 105px;
+        left: 292px;
+        bottom: 42px;
+        width: 300px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .game__input-wrapper {
+        display: flex;
+      }
+
+      .game__input {
+        height: 47px;
+        width: 82%;
+        background-color: transparent;
+        border: 0;
+        color: #fff;
+        padding: 0 5px 0 65px;
+        font-size: 20px;
+        outline: transparent;
+        box-sizing: border-box;
+        background-image: url('./ticket_icon.svg');
+        background-repeat: no-repeat;
+        background-position: 3px -5px;
+        background-size: 65px;
+      }
+
+      .game__input::placeholder {
+        color: #ccc;
+      }
+
+      .game__input::-webkit-outer-spin-button,
+      .game__input::-webkit-inner-spin-button {
+        appearance: none;
+        margin: 0;
+      }
+
+      .game__message {
+        line-height: 50px;
+        font-size: 20px;
+        text-align: center;
+      }
+
+      .game__info {
+        line-height: 50px;
+        text-align: center;
+        font-size: 18px;
+      }
+
+      .game__wheel {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-57.5%, -48%);
+        width: 465px;
+        height: 465px;
+      }
+
+      .game__wheel-sections {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        background-image: url('./wheel.svg');
+        background-size: contain;
+        background-repeat: no-repeat;
+      }
+
+      .is-spinning .game__wheel-sections {
+        transition: all 3s ease-out;
+      }
+
+      .game__wheel-button {
+        display: block;
+        width: 215px;
+        height: 258px;
+        border: 0;
+        cursor: default;
+        background-image: url('./button_grey.svg');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-color: transparent;
+        outline: transparent;
+        text-align: center;
+        padding: 0;
+        position: absolute;
+        z-index: 2;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+      }
+
+      .is-active .game__wheel-button {
+        cursor: pointer;
+        pointer-events: auto;
+      }
+
+      .is-active .game__wheel-button,
+      .is-spinning .game__wheel-button,
+      .is-stoped .game__wheel-button {
+        background-image: url('./spin_button.svg');
+      }
+
+      .game__wheel-button::after {
+        content: '';
+        background-image: url('./green_glow.svg');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-color: transparent;
+        background-position: 50% 50%;
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        z-index: -1;
+        opacity: 0;
+        animation: fadeIn 1s linear infinite;
+      }
+
+      .game__wheel-button:disabled {
+        cursor: default;
+      }
+
+      .game__wheel-button:disabled::after {
+        display: none;
+      }
+
+      .game__wheel-button:disabled .game__wheel-button-text {
+        display: none;
+      }
+
+      .game__wheel-button-text {
+        display: inline-block;
+        width: 50%;
+        color: #fff;
+        font-size: 25px;
+        text-transform: uppercase;
+      }
+
+      .game__wheel-section {
+        color: #5b3a00;
+        position: absolute;
+        text-align: center;
+        font-size: 20px;
+        left: 50%;
+        top: 50%;
+        visibility: hidden;
+      }
+
+      .game__wheel-section-highlighter {
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        width: 180px;
+        height: 265px;
+        background-image: url('./highlight.svg');
+        background-size: contain;
+        background-repeat: no-repeat;
+        z-index: 1;
+        transform: translateX(-50%);
+        display: none;
+      }
+
+      .is-stoped .game__wheel-section-highlighter {
+        display: block;
+      }
+
+      .game__wheel-section-title span {
+        font-size: 20px;
+      }
+
+      .game__lantern-glow {
+        position: absolute;
+        background-image: url('./lantern_glow.svg');
+        background-size: contain;
+        background-repeat: no-repeat;
+        height: 77px;
+        width: 86px;
+        opacity: 0;
+      }
+
+      .game__lantern-glow.g1 {
+        top: 112px;
+        left: 130px;
+      }
+
+      .game__lantern-glow.g2 {
+        top: 112px;
+        right: 203px;
+      }
+
+      .game__lantern-glow.g3 {
+        top: 282px;
+        left: 61px;
+      }
+
+      .game__lantern-glow.g4 {
+        top: 282px;
+        right: 129px;
+      }
+
+      .game__lantern-glow.g5 {
+        top: 416px;
+        left: 25px;
+      }
+
+      .game__lantern-glow.g6 {
+        top: 416px;
+        right: 92px;
+      }
+
+      .is-spinning .game__lantern-glow {
+        animation: fadeIn 2s linear infinite;
+      }
+
+      .is-spinning .game__lantern-glow.g2,
+      .is-spinning .game__lantern-glow.g3,
+      .is-spinning .game__lantern-glow.g6 {
+        animation-delay: 0s;
+      }
+
+      .is-spinning .game__lantern-glow.g1,
+      .is-spinning .game__lantern-glow.g4,
+      .is-spinning .game__lantern-glow.g5 {
+        animation-delay: 1s;
+      }
+
+      @media screen and (max-width: 1440px) {
+        .game-wrapper {
+          width: 676px;
+          height: 584px;
+          overflow: hidden;
+        }
+
+        .game {
+          transform: scale(0.7) translate(-20%, -20%);
+        }
+      }
+
+      @keyframes fadeIn {
+        50% {
+          opacity: 1;
+        }
+      }
+
+      .c-icon {
+        position: absolute;
+        right: 50px;
+        bottom: 100px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="game-wrapper">
+      <div class="game js-game">
+        <button class="game__close"></button>
+        <div class="game__lantern-glow g1"></div>
+        <div class="game__lantern-glow g2"></div>
+        <div class="game__lantern-glow g3"></div>
+        <div class="game__lantern-glow g4"></div>
+        <div class="game__lantern-glow g5"></div>
+        <div class="game__lantern-glow g6"></div>
+        <header class="game__header">
+          <h1 class="game__title">Conversion wheel</h1>
+          <h2 class="game__sub-title">convert your credits to coins</h2>
+        </header>
+        <div class="game__footer">
+          <div class="game__input-wrapper">
+            <input
+              type="number"
+              placeholder="Enter amount here"
+              class="game__input"
+            />
+            <img src="./coin_icon.svg" alt="" class="game__icon" />
+          </div>
+          <!-- <div class="game__message">You may exit now</div> -->
+          <div class="game__info">Min=100 credits | Max=100k credits</div>
+        </div>
+        <div class="game__wheel">
+          <button type="button" class="game__wheel-button js-spin">
+            <span class="game__wheel-button-text">Press to start</span>
+          </button>
+          <div class="game__wheel-section-highlighter"></div>
+          <div class="game__wheel-sections js-wheel">
+            <div class="game__wheel-section is-1">
+              <div class="game__wheel-section-title">x<span>1</span></div>
+              <div class="game__wheel-section-desc">
+                1% <strong>Fee</strong>
+              </div>
+            </div>
+            <div class="game__wheel-section is-2">
+              <div class="game__wheel-section-title">x<span>2</span></div>
+              <div class="game__wheel-section-desc">
+                2% <strong>Fee</strong>
+              </div>
+            </div>
+            <div class="game__wheel-section is-3">
+              <div class="game__wheel-section-title">x<span>3</span></div>
+              <div class="game__wheel-section-desc">
+                3% <strong>Fee</strong>
+              </div>
+            </div>
+            <div class="game__wheel-section is-4">
+              <div class="game__wheel-section-title">x<span>4</span></div>
+              <div class="game__wheel-section-desc">
+                4% <strong>Fee</strong>
+              </div>
+            </div>
+            <div class="game__wheel-section is-5">
+              <div class="game__wheel-section-title">x<span>5</span></div>
+              <div class="game__wheel-section-desc">
+                5% <strong>Fee</strong>
+              </div>
+            </div>
+            <div class="game__wheel-section is-6">
+              <div class="game__wheel-section-title">x<span>6</span></div>
+              <div class="game__wheel-section-desc">
+                6% <strong>Fee</strong>
+              </div>
+            </div>
+            <div class="game__wheel-section is-7">
+              <div class="game__wheel-section-title">x<span>7</span></div>
+              <div class="game__wheel-section-desc">
+                7% <strong>Fee</strong>
+              </div>
+            </div>
+            <div class="game__wheel-section is-8">
+              <div class="game__wheel-section-title">x<span>8</span></div>
+              <div class="game__wheel-section-desc">
+                8% <strong>Fee</strong>
+              </div>
+            </div>
+            <div class="game__wheel-section is-9">
+              <div class="game__wheel-section-title">x<span>9</span></div>
+              <div class="game__wheel-section-desc">
+                9% <strong>Fee</strong>
+              </div>
+            </div>
+            <div class="game__wheel-section is-10">
+              <div class="game__wheel-section-title">x<span>10</span></div>
+              <div class="game__wheel-section-desc">
+                10% <strong>Fee</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <img
+      src="./coin_icon.svg"
+      width="60"
+      height="60"
+      class="c-icon js-icon"
+      alt=""
+    />
+
+    <style>
+      :root {
+        --toLeft: 0;
+        --toTop: 0;
+        --toWidth: 0;
+        --toHeight: 0;
+      }
+
+      .fly {
+        animation: goTo 4s linear;
+      }
+
+      @keyframes goTo {
+        to {
+          left: var(--toLeft);
+          top: var(--toTop);
+          width: var(--toWidth);
+          height: var(--toHeight);
+        }
+      }
+    </style>
+
+    <script src="./main.js"></script>
+  </body>
+</html>
